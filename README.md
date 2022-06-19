@@ -8,7 +8,8 @@
     * The client : Use React.js to a client that can communicate with the server and display the game interface to the user.
 
  ### **Installation**
-    git clone <repo>
+    git clone https://github.com/bandaranaike/react-tic-tac-toe.git
+    cd react-tic-tac-toe
     npm install
     npm start
 
