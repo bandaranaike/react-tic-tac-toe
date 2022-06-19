@@ -15,9 +15,6 @@ import './index.css';
  * 6. Do the calculations from backend and send winner, history and xIsNext to the front end
  */
 
-
-
-
 function Square(props) {
   return (
     <button className='square' onClick={props.onClick}>
@@ -73,7 +70,6 @@ class Game extends React.Component {
       fetch("http://localhost:3001/api/reset-game", { method: "POST" })
         .then(r => r.json())
         .then(data => {
-          console.log("data", data)
           this.setState(data)
         });
     }
@@ -111,22 +107,30 @@ class Game extends React.Component {
     let status;
 
     if (this.state.winner) {
-      status = "Winner: " + this.state.winner;
+      if (this.state.winner === "over") {
+        status = "Game is over"
+      } else {
+        status = "Winner: " + this.state.winner;
+      }
+
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
 
     return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            onClick={(i) => this.handleClick(i)}
-          />
-        </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <button onClick={(k) => this.restartGame(true)}>Restart Game</button>
+      <div>
+        <h1>Tic Tac Toe Game</h1>
+        <div className="game">
+          <div className="game-board">
+            <Board
+              squares={current.squares}
+              onClick={(i) => this.handleClick(i)}
+            />
+          </div>
+          <div className="game-info">
+            <div>{status}</div>
+            <button className='restart-game' onClick={(k) => this.restartGame(true)}>Restart Game</button>
+          </div>
         </div>
       </div>
     );
