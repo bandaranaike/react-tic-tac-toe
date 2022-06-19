@@ -2,6 +2,19 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
+
+/**
+ * Steps are as follow
+ * 1. Get initial state from server : winner, history, xIsNext
+ * 2. Assing values to the state
+ * 3. Allow player to play
+ * 4. On click send the clicked square
+ * 5. Do the calculations from backend and send winner, history and xIsNext to the front end
+ */
+
+
+
+
 function Square(props) {
   return (
     <button className='square' onClick={props.onClick}>
@@ -48,20 +61,34 @@ class Game extends React.Component {
       xIsNext: true
     }
   }
+
+  async componentDidMount() {
+    let history = await getInformationFromBackend()
+
+    this.setState({
+      history
+    })
+  }
+
+
+
   handleClick(i) {
-    const history = this.state.history;
+    const history = this.state.history; // Get from api
     const current = history[history.length - 1];
     const squares = current.squares.slice();
+
+
+
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
+    this.setState({ // Push to the api
       history: history.concat([{ squares: squares, }]), xIsNext: !this.state.xIsNext,
     });
   }
+
   render() {
-    const history = this.state.history;
     const current = history[history.length - 1];
     const winner = calculateWinner(current.squares);
     let status;
@@ -85,6 +112,15 @@ class Game extends React.Component {
       </div>
     );
   }
+}
+
+async function getInformationFromBackend() {
+  let history;
+  await fetch("http://localhost:3001/api/history/get").then(re => re.json()).then(r => {
+    history = r.history;
+    console.log("history", history)
+  })
+  return history;
 }
 
 function calculateWinner(squares) {
