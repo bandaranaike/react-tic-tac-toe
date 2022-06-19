@@ -5,11 +5,14 @@ import './index.css';
 
 /**
  * Steps are as follow
- * 1. Get initial state from server : winner, history, xIsNext
- * 2. Assing values to the state
+ * 1. Get initial state from server : winner, history, xIsNext, save it in db
+ * 2. Assing values to the state in front end
  * 3. Allow player to play
  * 4. On click send the clicked square
- * 5. Do the calculations from backend and send winner, history and xIsNext to the front end
+ * 5. Save it in database
+ *    i.  table: history(player_id, step_number, steps)
+ *    ii. table: player(uuid, winning_symbol) 
+ * 6. Do the calculations from backend and send winner, history and xIsNext to the front end
  */
 
 
@@ -56,21 +59,18 @@ class Game extends React.Component {
     super(props);
     this.state = {
       history: [{
-        squares: Array(9).fill(null),
-      }],
-      xIsNext: true
+        squares: Array(9).fill(null)
+      }]
     }
   }
 
   async componentDidMount() {
-    let history = await getInformationFromBackend()
-
+    let { history, xIsNext, winner } = await getInformationFromBackend()
+    console.log("history 5555", history)
     this.setState({
-      history
+      history, xIsNext, winner
     })
   }
-
-
 
   handleClick(i) {
     const history = this.state.history; // Get from api
@@ -78,22 +78,35 @@ class Game extends React.Component {
     const squares = current.squares.slice();
 
 
-
-    if (calculateWinner(squares) || squares[i]) {
+    if (this.state.winner || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({ // Push to the api
+
+     squares[i] = this.state.xIsNext ? 'X' : 'O';
+
+     this.setState({ // Push to the api
       history: history.concat([{ squares: squares, }]), xIsNext: !this.state.xIsNext,
     });
+
+    fetch("http://localhost:3001/api/update-data", {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        square: i,
+        xIsNext: this.state.xIsNext
+      })
+    })
   }
 
   render() {
+    const history = this.state.history; // Get from api
+    console.log("hiostory 2", history)
     const current = history[history.length - 1];
-    const winner = calculateWinner(current.squares);
+    console.log("current", current)
+
     let status;
-    if (winner) {
-      status = "Winner: " + winner;
+    if (this.state.winner) {
+      status = "Winner: " + this.state.winner;
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
@@ -116,8 +129,8 @@ class Game extends React.Component {
 
 async function getInformationFromBackend() {
   let history;
-  await fetch("http://localhost:3001/api/history/get").then(re => re.json()).then(r => {
-    history = r.history;
+  await fetch("http://localhost:3001/api/initial-data").then(re => re.json()).then(r => {
+    history = r;
     console.log("history", history)
   })
   return history;
