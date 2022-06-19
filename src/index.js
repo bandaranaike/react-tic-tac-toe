@@ -15,6 +15,8 @@ import './index.css';
  * 6. Do the calculations from backend and send winner, history and xIsNext to the front end
  */
 
+const API_URL = process.env.API_URL || "http://localhost:3001/api/";
+
 function Square(props) {
   return (
     <button className='square' onClick={props.onClick}>
@@ -67,7 +69,7 @@ class Game extends React.Component {
 
   restartGame = (status) => {
     if (status) {
-      fetch("http://localhost:3001/api/reset-game", { method: "POST" })
+      fetch(API_URL + "reset-game", { method: "POST" })
         .then(r => r.json())
         .then(data => {
           this.setState(data)
@@ -90,7 +92,7 @@ class Game extends React.Component {
   }
 
   updateServerData(i) {
-    fetch("http://localhost:3001/api/update-data", {
+    fetch(API_URL + "update-data", {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
