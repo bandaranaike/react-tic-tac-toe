@@ -64,12 +64,19 @@ class Game extends React.Component {
     }
   }
 
-  async componentDidMount() {
-    let { history, xIsNext, winner } = await getInformationFromBackend()
-    console.log("history 5555", history)
-    this.setState({
-      history, xIsNext, winner
-    })
+  componentDidMount() {
+    this.updateServerData(-1);
+  }
+
+  restartGame = (status) => {
+    if (status) {
+      fetch("http://localhost:3001/api/reset-game", { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
+          console.log("data", data)
+          this.setState(data)
+        });
+    }
   }
 
   handleClick(i) {
@@ -77,17 +84,16 @@ class Game extends React.Component {
     const current = history[history.length - 1];
     const squares = current.squares.slice();
 
-
     if (this.state.winner || squares[i]) {
       return;
     }
 
-     squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
 
-     this.setState({ // Push to the api
-      history: history.concat([{ squares: squares, }]), xIsNext: !this.state.xIsNext,
-    });
+    this.updateServerData(i);
+  }
 
+  updateServerData(i) {
     fetch("http://localhost:3001/api/update-data", {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -95,21 +101,21 @@ class Game extends React.Component {
         square: i,
         xIsNext: this.state.xIsNext
       })
-    })
+    }).then(r => r.json()).then(r => this.setState(r.data))
   }
 
   render() {
-    const history = this.state.history; // Get from api
-    console.log("hiostory 2", history)
+    const history = this.state.history;
     const current = history[history.length - 1];
-    console.log("current", current)
 
     let status;
+
     if (this.state.winner) {
       status = "Winner: " + this.state.winner;
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
+
     return (
       <div className="game">
         <div className="game-board">
@@ -120,41 +126,13 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ol>{/* TODO */}</ol>
+          <button onClick={(k) => this.restartGame(true)}>Restart Game</button>
         </div>
       </div>
     );
   }
 }
 
-async function getInformationFromBackend() {
-  let history;
-  await fetch("http://localhost:3001/api/initial-data").then(re => re.json()).then(r => {
-    history = r;
-    console.log("history", history)
-  })
-  return history;
-}
-
-function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a]
-    }
-  }
-  return null;
-}
 
 // ========================================
 
